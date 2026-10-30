@@ -57,12 +57,16 @@
                         </tr>
                       </thead>
                       <tbody>
-                        @foreach ($perans as $peran)
-                        <tr>
-                          <td class="w3-list-info">{{ $peran->cast_id }}</td>
-                          <td class="w3-list-info">{{ $peran->actor }}</td>
-                        </tr>
-                        @endforeach
+                        @forelse ($film->castMembers as $cast)
+                          <tr>
+                            <td class="w3-list-info">{{ $cast->name }}</td>
+                            <td class="w3-list-info">{{ $cast->pivot->actor ?: '-' }}</td>
+                          </tr>
+                        @empty
+                          <tr>
+                            <td class="w3-list-info" colspan="2">Data cast belum tersedia.</td>
+                          </tr>
+                        @endforelse
                       </tbody>
                     </table>
                   </div>
@@ -114,24 +118,34 @@
           </div>
         </div>
         <div class="clearfix"> </div>
-        <div class="all-comments">
+        <div class="all-comments" id="comments">
           <div class="all-comments-info">
             <a href="#">Comments</a>
             <div class="agile-info-wthree-box">
-              <form>
-                <input type="text" placeholder="Name" required="">			           					   
-                <input type="text" placeholder="Email" required="">
-                <input type="text" placeholder="Phone" required="">
-                <textarea placeholder="Message" required=""></textarea>
-                <input type="submit" value="SEND">
-                <div class="clearfix"> </div>
-              </form>
+              @auth
+                @if ($errors->comment->any())
+                  <div class="alert alert-danger" role="alert">
+                    @foreach ($errors->comment->all() as $error)
+                      <p>{{ $error }}</p>
+                    @endforeach
+                  </div>
+                @endif
+                <form action="{{ route('comments.store', $film) }}" method="post">
+                  @csrf
+                  <textarea name="comment" maxlength="500" placeholder="Message" required>{{ old('comment') }}</textarea>
+                  <input type="submit" value="SEND">
+                  <div class="clearfix"> </div>
+                </form>
+              @else
+                <p>Silakan login untuk menulis komentar.</p>
+                <a class="btn btn-primary" href="{{ route('login', ['film_id' => $film->id]) }}">Login untuk berkomentar</a>
+              @endauth
             </div>
           </div>
           <div class="media-grids">
             @foreach ($comments as $comment)
               <div class="media">
-                <h5>{{ $comment->user_id }}</h5>
+                <h5>{{ $comment->user?->name ?? 'Pengguna' }}</h5>
                 <div class="media-left">
                   <a href="#">
                     <img src="{{ asset('storage/images/user.jpg') }}" title="One movies" alt=" " />
